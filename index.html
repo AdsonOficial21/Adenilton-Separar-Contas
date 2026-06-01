@@ -1,0 +1,1134 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Separador de Contas</title>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyCWu5AHshMOAZtSTau4bSn1igUPz_J70wk",
+    authDomain: "adenilton-separar-contas.firebaseapp.com",
+    databaseURL: "https://adenilton-separar-contas-default-rtdb.firebaseio.com",
+    projectId: "adenilton-separar-contas",
+    storageBucket: "adenilton-separar-contas.firebasestorage.app",
+    messagingSenderId: "441449486778",
+    appId: "1:441449486778:web:377b5cdee017d00ca3e583"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.database();
+</script>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@300;400;600&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --gold: #c9a84c;
+    --gold-light: #f0d080;
+    --gold-dim: #7a6128;
+    --gold-glow: rgba(201,168,76,0.18);
+    --bg: #07070a;
+    --surface: #0f0f13;
+    --surface2: #14141a;
+    --surface3: #1a1a22;
+    --border: #22222c;
+    --border-soft: #1c1c24;
+    --text: #e8e8ec;
+    --text-soft: #a0a0b0;
+    --muted: #505060;
+    --email-color: #4db8ff;
+    --email-dim: rgba(77,184,255,0.12);
+    --pass-color: #c9a84c;
+    --pass-dim: rgba(201,168,76,0.10);
+    --green: #3dba72;
+    --green-dim: rgba(61,186,114,0.12);
+    --red: #c0392b;
+    --red-dim: rgba(192,57,43,0.10);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Barlow Condensed', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 48px 24px 80px;
+    overflow-x: hidden;
+  }
+
+  /* grid overlay */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(201,168,76,0.025) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(201,168,76,0.025) 1px, transparent 1px);
+    background-size: 48px 48px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* vignette */
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: radial-gradient(ellipse at center, transparent 40%, rgba(7,7,10,0.85) 100%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* ══════════════════════════════════
+     HOME SCREEN
+  ══════════════════════════════════ */
+  #homeScreen {
+    position: fixed;
+    inset: 0;
+    background: var(--bg);
+    z-index: 100;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 56px;
+  }
+
+  #homeScreen::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(201,168,76,0.025) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(201,168,76,0.025) 1px, transparent 1px);
+    background-size: 48px 48px;
+    pointer-events: none;
+  }
+
+  /* glow spot behind logo */
+  #homeScreen::after {
+    content: '';
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -70%);
+    width: 500px;
+    height: 300px;
+    background: radial-gradient(ellipse, rgba(201,168,76,0.06) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .home-header {
+    text-align: center;
+    position: relative;
+    z-index: 1;
+  }
+
+  .home-brand {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 5px;
+    color: var(--gold-dim);
+    margin-bottom: 16px;
+  }
+
+  .home-brand svg { opacity: 0.6; }
+
+  .home-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(42px, 8vw, 80px);
+    letter-spacing: 6px;
+    background: linear-gradient(150deg, var(--gold-light) 0%, var(--gold) 50%, var(--gold-dim) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    line-height: 1;
+  }
+
+  .home-divider {
+    width: 60px;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--gold), transparent);
+    margin: 14px auto;
+  }
+
+  .home-sub {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 4px;
+    text-transform: uppercase;
+  }
+
+  .user-cards {
+    display: flex;
+    gap: 24px;
+    position: relative;
+    z-index: 1;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .user-card {
+    width: 186px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    padding: 36px 20px 30px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+    cursor: pointer;
+    transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .user-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--gold), transparent);
+    opacity: 0;
+    transition: opacity 0.22s;
+  }
+
+  .user-card::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(150deg, rgba(201,168,76,0.05), transparent 60%);
+    opacity: 0;
+    transition: opacity 0.22s;
+  }
+
+  .user-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 20px 60px rgba(201,168,76,0.12), 0 0 0 1px rgba(201,168,76,0.2);
+    border-color: rgba(201,168,76,0.3);
+  }
+
+  .user-card:hover::before { opacity: 1; }
+  .user-card:hover::after  { opacity: 1; }
+  .user-card:active { transform: translateY(-2px); }
+
+  .user-avatar {
+    width: 66px;
+    height: 66px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--gold) 0%, var(--gold-dim) 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    z-index: 1;
+  }
+
+  .user-avatar svg {
+    width: 32px;
+    height: 32px;
+    color: var(--bg);
+  }
+
+  .user-name {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 24px;
+    letter-spacing: 5px;
+    color: var(--text);
+    position: relative;
+    z-index: 1;
+  }
+
+  .user-enter {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: var(--muted);
+    text-transform: uppercase;
+    position: relative;
+    z-index: 1;
+    transition: color 0.2s;
+  }
+
+  .user-card:hover .user-enter { color: var(--gold); }
+
+  .user-enter svg { transition: transform 0.2s; }
+  .user-card:hover .user-enter svg { transform: translateX(3px); }
+
+  /* ══════════════════════════════════
+     TOP BAR
+  ══════════════════════════════════ */
+  .btn-back {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: #ffffff;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    padding: 8px 16px;
+    border-radius: 2px;
+    cursor: pointer;
+    z-index: 10;
+    transition: all 0.15s;
+    display: none;
+    align-items: center;
+    gap: 8px;
+  }
+  .btn-back:hover { border-color: var(--gold); color: var(--gold); }
+
+  .active-user-tag {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--gold);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 3px;
+    padding: 8px 16px;
+    border-radius: 2px;
+    z-index: 10;
+    display: none;
+    align-items: center;
+    gap: 8px;
+  }
+
+  /* ══════════════════════════════════
+     MAIN WRAPPER
+  ══════════════════════════════════ */
+  .wrapper {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    max-width: 1120px;
+  }
+
+  header {
+    text-align: center;
+    margin-bottom: 44px;
+    padding-top: 8px;
+  }
+
+  .brand-label {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 5px;
+    color: var(--gold-dim);
+    margin-bottom: 14px;
+  }
+
+  .page-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(38px, 6vw, 64px);
+    letter-spacing: 5px;
+    background: linear-gradient(150deg, var(--gold-light) 0%, var(--gold) 55%, var(--gold-dim) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    line-height: 1;
+  }
+
+  .header-line {
+    width: 80px;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--gold), transparent);
+    margin: 14px auto 0;
+  }
+
+  /* ══════════════════════════════════
+     INPUT SECTION
+  ══════════════════════════════════ */
+  .input-section {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    padding: 28px 28px 24px;
+    margin-bottom: 20px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .input-section::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent 0%, var(--gold) 50%, transparent 100%);
+  }
+
+  .section-label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 13px;
+    letter-spacing: 4px;
+    color: var(--gold);
+    margin-bottom: 14px;
+  }
+
+  .section-label svg {
+    color: var(--gold);
+    flex-shrink: 0;
+  }
+
+  textarea {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    color: var(--text);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 12.5px;
+    line-height: 1.75;
+    padding: 16px;
+    resize: vertical;
+    min-height: 120px;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    outline: none;
+  }
+
+  textarea:focus {
+    border-color: rgba(201,168,76,0.4);
+    box-shadow: 0 0 0 3px rgba(201,168,76,0.05);
+  }
+  textarea::placeholder { color: var(--muted); }
+
+  .btn-nova {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    background: transparent;
+    border: 1px solid rgba(192,57,43,0.35);
+    color: rgba(192,57,43,0.7);
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 13px;
+    letter-spacing: 3px;
+    padding: 9px 24px;
+    border-radius: 2px;
+    cursor: pointer;
+    margin-top: 14px;
+    transition: all 0.18s;
+  }
+  .btn-nova:hover {
+    background: var(--red-dim);
+    border-color: var(--red);
+    color: var(--red);
+  }
+
+  /* ══════════════════════════════════
+     STATS BAR
+  ══════════════════════════════════ */
+  .stats-bar {
+    display: none;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    padding: 14px 24px;
+    margin-bottom: 20px;
+    gap: 32px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+  .stats-bar.visible { display: flex; }
+
+  .stat {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 1px;
+    color: #ffffff;
+  }
+
+  .stat svg { color: var(--gold); flex-shrink: 0; }
+
+  .stat-val {
+    color: var(--gold);
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 22px;
+    letter-spacing: 1px;
+    line-height: 1;
+  }
+
+  .stat-sep {
+    width: 1px;
+    height: 24px;
+    background: var(--border);
+  }
+
+  /* ══════════════════════════════════
+     RESULTS GRID
+  ══════════════════════════════════ */
+  .results-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+
+  @media (max-width: 680px) {
+    .results-grid { grid-template-columns: 1fr; }
+  }
+
+  .col-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+
+  .col-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface2);
+  }
+
+  .col-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 14px;
+    letter-spacing: 4px;
+  }
+
+  .col-title-icon {
+    width: 28px;
+    height: 28px;
+    border-radius: 2px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .col-email .col-title-icon { background: var(--email-dim); color: var(--email-color); }
+  .col-pass  .col-title-icon { background: var(--pass-dim);  color: var(--pass-color); }
+  .col-email .col-title { color: var(--email-color); }
+  .col-pass  .col-title { color: var(--pass-color); }
+
+  .col-count {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    color: #ffffff;
+    background: var(--bg);
+    padding: 4px 12px;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    letter-spacing: 1px;
+  }
+
+  .col-body {
+    padding: 10px;
+    max-height: 480px;
+    overflow-y: auto;
+  }
+
+  .col-body::-webkit-scrollbar { width: 3px; }
+  .col-body::-webkit-scrollbar-track { background: transparent; }
+  .col-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  /* ══════════════════════════════════
+     ITEM ROWS
+  ══════════════════════════════════ */
+  .item-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 10px;
+    border-radius: 2px;
+    margin-bottom: 3px;
+    background: var(--surface3);
+    border: 1px solid transparent;
+    transition: border-color 0.15s, background 0.15s;
+  }
+
+  .item-row:hover { border-color: var(--border); }
+
+  .item-num {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 11px;
+    letter-spacing: 1px;
+    min-width: 22px;
+    text-align: center;
+    padding: 2px 4px;
+    border-radius: 2px;
+    flex-shrink: 0;
+  }
+
+  .col-email .item-num { background: var(--email-dim); color: var(--email-color); }
+  .col-pass  .item-num { background: var(--pass-dim);  color: var(--pass-color); }
+
+  .item-val {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11.5px;
+    color: #ffffff;
+    flex: 1;
+    word-break: break-all;
+    line-height: 1.4;
+  }
+
+  /* Checkbox */
+  .item-check {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 16px;
+    height: 16px;
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    background: var(--bg);
+    cursor: pointer;
+    flex-shrink: 0;
+    position: relative;
+    transition: all 0.15s;
+  }
+
+  .item-check:hover { border-color: var(--green); }
+
+  .item-check:checked {
+    background: var(--green);
+    border-color: var(--green);
+  }
+
+  .item-check:checked::after {
+    content: '';
+    position: absolute;
+    top: 2px; left: 5px;
+    width: 4px; height: 8px;
+    border: 2px solid #000;
+    border-top: none;
+    border-left: none;
+    transform: rotate(45deg);
+  }
+
+  /* Used state */
+  .item-row.used { background: rgba(61,186,114,0.04); border-color: rgba(61,186,114,0.12); }
+  .item-row.used .item-val { color: var(--green); }
+  .item-row.used .item-num { background: var(--green-dim); color: var(--green); }
+
+  /* Copy buttons */
+  .btn-copy-pair {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: #ffffff;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 1px;
+    padding: 5px 10px;
+    border-radius: 2px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.15s;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .btn-copy-pair:hover {
+    border-color: var(--gold-dim);
+    color: var(--gold);
+    background: var(--gold-glow);
+  }
+
+  .btn-copy-pair.done {
+    border-color: var(--green);
+    color: var(--green);
+    background: var(--green-dim);
+  }
+
+  /* No results */
+  #no-results {
+    display: none;
+    text-align: center;
+    padding: 64px 20px;
+    color: var(--muted);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 2px;
+  }
+
+  /* ══════════════════════════════════
+     TOAST
+  ══════════════════════════════════ */
+  .toast {
+    position: fixed;
+    bottom: 32px;
+    right: 32px;
+    background: var(--surface2);
+    border: 1px solid var(--gold-dim);
+    color: var(--gold);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 3px;
+    padding: 12px 24px;
+    border-radius: 2px;
+    transform: translateY(80px);
+    opacity: 0;
+    transition: all 0.3s cubic-bezier(.34,1.56,.64,1);
+    z-index: 999;
+    pointer-events: none;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .toast::before {
+    content: '';
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--gold);
+    flex-shrink: 0;
+    box-shadow: 0 0 6px var(--gold);
+  }
+
+  .toast.show { transform: translateY(0); opacity: 1; }
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════ HOME ══════════════════════ -->
+<div id="homeScreen">
+  <div class="home-header">
+    <div class="home-title">SEPARADOR DE CONTAS</div>
+    <div class="home-divider"></div>
+    <div class="home-sub">Selecione o usuário para continuar</div>
+  </div>
+
+  <div class="user-cards">
+    <div class="user-card" onclick="entrar('Rose')">
+      <div class="user-avatar">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+          <circle cx="12" cy="7" r="4"/>
+        </svg>
+      </div>
+      <div class="user-name">ROSE</div>
+      <div class="user-enter">
+        ENTRAR
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M5 12h14M12 5l7 7-7 7"/>
+        </svg>
+      </div>
+    </div>
+
+    <div class="user-card" onclick="entrar('Adenilton')">
+      <div class="user-avatar">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+          <circle cx="12" cy="7" r="4"/>
+        </svg>
+      </div>
+      <div class="user-name">ADENILTON</div>
+      <div class="user-enter">
+        ENTRAR
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M5 12h14M12 5l7 7-7 7"/>
+        </svg>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- top bar -->
+<button class="btn-back" id="btnBack" onclick="voltarHome()">
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M19 12H5M12 19l-7-7 7-7"/>
+  </svg>
+  TROCAR USUÁRIO
+</button>
+
+<div class="active-user-tag" id="activeUserTag">
+  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+  </svg>
+  <span id="activeUserName"></span>
+</div>
+
+<!-- ══════════════════════ MAIN ══════════════════════ -->
+<div class="wrapper">
+
+  <header>
+  <div class="page-title" id="pageTitle">SEPARADOR</div>
+    <div class="header-line"></div>
+  </header>
+
+  <!-- input -->
+  <div class="input-section">
+    <div class="section-label">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+      </svg>
+      COLE AS CONTAS ABAIXO
+    </div>
+    <textarea id="input" placeholder="exemplo@hotmail.com:senha123&#10;outro@gmail.com:outrasenha&#10;ou tudo em uma linha separado por espaço / quebra de linha"></textarea>
+    <button class="btn-nova" onclick="novaRemessa()">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/>
+      </svg>
+      NOVA REMESSA
+    </button>
+  </div>
+
+  <!-- stats -->
+  <div class="stats-bar" id="statsBar">
+    <div class="stat">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/>
+      </svg>
+      <span class="stat-val" id="statTotal">0</span>
+      contas processadas
+    </div>
+    <div class="stat-sep"></div>
+    <div class="stat">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/>
+      </svg>
+      <span class="stat-val" id="statEmails">0</span>
+      emails
+    </div>
+    <div class="stat-sep"></div>
+    <div class="stat">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+      </svg>
+      <span class="stat-val" id="statPasswords">0</span>
+      senhas
+    </div>
+  </div>
+
+  <!-- results -->
+  <div class="results-grid" id="resultsGrid" style="display:none">
+    <div class="col-card col-email">
+      <div class="col-header">
+        <div class="col-title">
+          <div class="col-title-icon">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/>
+            </svg>
+          </div>
+          EMAILS
+        </div>
+        <span class="col-count" id="emailCount">0</span>
+      </div>
+      <div class="col-body" id="emailList"></div>
+    </div>
+
+    <div class="col-card col-pass">
+      <div class="col-header">
+        <div class="col-title">
+          <div class="col-title-icon">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+            </svg>
+          </div>
+          SENHAS
+        </div>
+        <span class="col-count" id="passCount">0</span>
+      </div>
+      <div class="col-body" id="passList"></div>
+    </div>
+  </div>
+
+  <div id="no-results">— NENHUMA CONTA VÁLIDA ENCONTRADA —</div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  let usuarioAtivo = null;
+  let parsed = { emails: [], passwords: [] };
+  let saveTimeout = null;
+
+  // ── NAVEGAÇÃO ──
+  function entrar(nome) {
+    usuarioAtivo = nome;
+    localStorage.setItem('ats_usuario', nome);
+    limparTela();
+    document.getElementById('homeScreen').style.display = 'none';
+    document.getElementById('btnBack').style.display = 'flex';
+    document.getElementById('activeUserTag').style.display = 'flex';
+    document.getElementById('activeUserName').textContent = nome.toUpperCase();
+    document.getElementById('pageTitle').textContent = nome.toUpperCase();
+    carregarDoFirebase(nome);
+  }
+
+  function voltarHome() {
+    if (usuarioAtivo) {
+      db.ref('usuarios/' + usuarioAtivo.toLowerCase()).remove();
+    }
+    localStorage.removeItem('ats_usuario');
+    usuarioAtivo = null;
+    parsed = { emails: [], passwords: [] };
+    document.getElementById('homeScreen').style.display = 'flex';
+    document.getElementById('btnBack').style.display = 'none';
+    document.getElementById('activeUserTag').style.display = 'none';
+  }
+
+  // ── FIREBASE ──
+  function salvarNoFirebase(contas) {
+    if (!usuarioAtivo) return;
+    const chave = usuarioAtivo.toLowerCase();
+    const marcados = getMarcados();
+    db.ref('usuarios/' + chave).set({ contas: contas, marcados: marcados });
+  }
+
+  function salvarMarcadosNoFirebase() {
+    if (!usuarioAtivo) return;
+    const chave = usuarioAtivo.toLowerCase();
+    const marcados = getMarcados();
+    db.ref('usuarios/' + chave).update({ marcados: marcados });
+  }
+
+  function getMarcados() {
+    const checks = document.querySelectorAll('#emailList .item-check');
+    const marcados = [];
+    checks.forEach((chk, i) => { if (chk.checked) marcados.push(i); });
+    return marcados;
+  }
+
+  function carregarDoFirebase(nome) {
+    const chave = nome.toLowerCase();
+    db.ref('usuarios/' + chave).once('value').then(snap => {
+      const dados = snap.val();
+      if (dados && dados.contas) {
+        document.getElementById('input').value = dados.contas;
+        parseAccounts();
+        if (dados.marcados && dados.marcados.length > 0) {
+          setTimeout(() => {
+            const emailRows = document.querySelectorAll('#emailList .item-row');
+            const passRows  = document.querySelectorAll('#passList .item-row');
+            dados.marcados.forEach(idx => {
+              const chk = emailRows[idx] && emailRows[idx].querySelector('.item-check');
+              if (chk) {
+                chk.checked = true;
+                emailRows[idx].classList.add('used');
+                if (passRows[idx]) passRows[idx].classList.add('used');
+              }
+            });
+          }, 100);
+        }
+      }
+    });
+  }
+
+  // ── PARSE ──
+  function parseAccounts() {
+    const raw = document.getElementById('input').value.trim();
+    if (!raw) { limparTela(); return; }
+
+    const lines = raw.split(/[\n\r]+/).map(l => l.trim()).filter(l => l.length > 0);
+    parsed.emails = [];
+    parsed.passwords = [];
+
+    lines.forEach(line => {
+      const parts = line.split(/\s+/);
+      parts.forEach(part => {
+        const idx = part.indexOf(':');
+        if (idx > 0) {
+          const email = part.substring(0, idx).trim();
+          const pass  = part.substring(idx + 1).trim();
+          if (email && pass) {
+            parsed.emails.push(email);
+            parsed.passwords.push(pass);
+          }
+        }
+      });
+    });
+
+    render();
+  }
+
+  function render() {
+    const grid     = document.getElementById('resultsGrid');
+    const noRes    = document.getElementById('no-results');
+    const statsBar = document.getElementById('statsBar');
+    const count    = parsed.emails.length;
+
+    if (count === 0) {
+      grid.style.display = 'none';
+      noRes.style.display = 'none';
+      statsBar.classList.remove('visible');
+      return;
+    }
+
+    noRes.style.display = 'none';
+    grid.style.display  = 'grid';
+    statsBar.classList.add('visible');
+
+    document.getElementById('statTotal').textContent     = count;
+    document.getElementById('statEmails').textContent    = count;
+    document.getElementById('statPasswords').textContent = count;
+    document.getElementById('emailCount').textContent    = count;
+    document.getElementById('passCount').textContent     = count;
+
+    const emailList = document.getElementById('emailList');
+    const passList  = document.getElementById('passList');
+    emailList.innerHTML = '';
+    passList.innerHTML  = '';
+
+    parsed.emails.forEach((email, i) => {
+      emailList.appendChild(makeEmailRow(i + 1, email, i));
+      passList.appendChild(makePassRow(i + 1, parsed.passwords[i], i));
+    });
+
+    showToast(`${count} CONTA${count > 1 ? 'S' : ''} SEPARADA${count > 1 ? 'S' : ''}`);
+  }
+
+  function makeEmailRow(num, email, idx) {
+    const row = document.createElement('div');
+    row.className = 'item-row';
+    row.dataset.idx = idx;
+
+    const check = document.createElement('input');
+    check.type = 'checkbox';
+    check.className = 'item-check';
+    check.addEventListener('change', () => {
+      const passRows = document.querySelectorAll('#passList .item-row');
+      if (check.checked) {
+        row.classList.add('used');
+        if (passRows[idx]) passRows[idx].classList.add('used');
+      } else {
+        row.classList.remove('used');
+        if (passRows[idx]) passRows[idx].classList.remove('used');
+      }
+      salvarMarcadosNoFirebase();
+    });
+
+    const num_span = document.createElement('span');
+    num_span.className = 'item-num';
+    num_span.textContent = num;
+
+    const val_span = document.createElement('span');
+    val_span.className = 'item-val';
+    val_span.textContent = email;
+
+    const btn = document.createElement('button');
+    btn.className = 'btn-copy-pair';
+    btn.innerHTML = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>COPIAR EMAIL E SENHA`;
+    btn.addEventListener('click', () => {
+      const pair = `${parsed.emails[idx]}\n${parsed.passwords[idx]}`;
+      navigator.clipboard.writeText(pair).then(() => {
+        btn.innerHTML = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>COPIADO`;
+        btn.classList.add('done');
+        setTimeout(() => {
+          btn.innerHTML = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>COPIAR EMAIL E SENHA`;
+          btn.classList.remove('done');
+        }, 1600);
+      });
+    });
+
+    row.appendChild(check);
+    row.appendChild(num_span);
+    row.appendChild(val_span);
+    row.appendChild(btn);
+    return row;
+  }
+
+  function makePassRow(num, pass, idx) {
+    const row = document.createElement('div');
+    row.className = 'item-row';
+
+    const num_span = document.createElement('span');
+    num_span.className = 'item-num';
+    num_span.textContent = num;
+
+    const val_span = document.createElement('span');
+    val_span.className = 'item-val';
+    val_span.textContent = pass;
+
+    const btn = document.createElement('button');
+    btn.className = 'btn-copy-pair';
+    btn.innerHTML = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>COPIAR SENHA`;
+    btn.addEventListener('click', () => {
+      navigator.clipboard.writeText(pass).then(() => {
+        btn.innerHTML = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>COPIADO`;
+        btn.classList.add('done');
+        setTimeout(() => {
+          btn.innerHTML = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>COPIAR SENHA`;
+          btn.classList.remove('done');
+        }, 1600);
+      });
+    });
+
+    row.appendChild(num_span);
+    row.appendChild(val_span);
+    row.appendChild(btn);
+    return row;
+  }
+
+  function novaRemessa() {
+    if (usuarioAtivo) {
+      db.ref('usuarios/' + usuarioAtivo.toLowerCase()).remove();
+    }
+    limparTela();
+  }
+
+  function limparTela() {
+    document.getElementById('input').value = '';
+    parsed = { emails: [], passwords: [] };
+    document.getElementById('resultsGrid').style.display = 'none';
+    document.getElementById('no-results').style.display = 'none';
+    document.getElementById('statsBar').classList.remove('visible');
+    document.getElementById('emailList').innerHTML = '';
+    document.getElementById('passList').innerHTML = '';
+  }
+
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2200);
+  }
+
+  function escapeHtml(str) {
+    return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  document.getElementById('input').addEventListener('input', () => {
+    const raw = document.getElementById('input').value.trim();
+    if (raw) {
+      parseAccounts();
+    }
+    clearTimeout(saveTimeout);
+    saveTimeout = setTimeout(() => {
+      salvarNoFirebase(document.getElementById('input').value);
+    }, 800);
+  });
+
+  // Restaurar sessão ao carregar
+  (function init() {
+    const usuario = localStorage.getItem('ats_usuario');
+    if (usuario) entrar(usuario);
+  })();
+</script>
+
+</body>
+</html>
