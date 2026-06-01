@@ -551,9 +551,10 @@
     overflow-y: auto;
   }
 
-  .col-body::-webkit-scrollbar { width: 3px; }
-  .col-body::-webkit-scrollbar-track { background: transparent; }
-  .col-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+  .col-body::-webkit-scrollbar { width: 10px; }
+  .col-body::-webkit-scrollbar-track { background: var(--surface2); border-radius: 4px; }
+  .col-body::-webkit-scrollbar-thumb { background: var(--gold-dim); border-radius: 4px; }
+  .col-body::-webkit-scrollbar-thumb:hover { background: var(--gold); }
 
   /* ══════════════════════════════════
      ITEM ROWS
@@ -601,10 +602,10 @@
   .item-check {
     appearance: none;
     -webkit-appearance: none;
-    width: 16px;
-    height: 16px;
-    border: 1px solid var(--border);
-    border-radius: 2px;
+    width: 26px;
+    height: 26px;
+    border: 2px solid var(--border);
+    border-radius: 4px;
     background: var(--bg);
     cursor: pointer;
     flex-shrink: 0;
@@ -622,9 +623,9 @@
   .item-check:checked::after {
     content: '';
     position: absolute;
-    top: 2px; left: 5px;
-    width: 4px; height: 8px;
-    border: 2px solid #000;
+    top: 3px; left: 8px;
+    width: 6px; height: 12px;
+    border: 2.5px solid #000;
     border-top: none;
     border-left: none;
     transform: rotate(45deg);
@@ -634,6 +635,11 @@
   .item-row.used { background: rgba(61,186,114,0.04); border-color: rgba(61,186,114,0.12); }
   .item-row.used .item-val { color: var(--green); }
   .item-row.used .item-num { background: var(--green-dim); color: var(--green); }
+
+  /* Next row highlight */
+  .item-row.next-up { background: rgba(255,20,147,0.07); border-color: rgba(255,20,147,0.3); }
+  .item-row.next-up .item-val { color: #FF1493; }
+  .item-row.next-up .item-num { background: rgba(255,20,147,0.15); color: #FF1493; }
 
   /* Copy buttons */
   .btn-copy-pair {
@@ -934,6 +940,7 @@
               }
             });
             syncRowHeights();
+            updateNextUp();
           }, 150);
         }
       }
@@ -1022,6 +1029,7 @@
         if (passRows[idx]) passRows[idx].classList.remove('used');
       }
       salvarMarcadosNoFirebase();
+      updateNextUp();
     });
 
     const num_span = document.createElement('span');
@@ -1140,6 +1148,51 @@
       salvarNoFirebase(document.getElementById('input').value);
     }, 800);
   });
+
+  // ── NEXT-UP HIGHLIGHT ──
+  function updateNextUp() {
+    const emailRows = Array.from(document.querySelectorAll('#emailList .item-row'));
+    const passRows  = Array.from(document.querySelectorAll('#passList .item-row'));
+
+    // Remove all next-up classes first
+    emailRows.forEach(r => r.classList.remove('next-up'));
+    passRows.forEach(r  => r.classList.remove('next-up'));
+
+    // Check if any box is checked
+    const anyChecked = emailRows.some(r => {
+      const chk = r.querySelector('.item-check');
+      return chk && chk.checked;
+    });
+    if (!anyChecked) return;
+
+    // Find the first row that is NOT used/checked
+    const nextIdx = emailRows.findIndex(r => !r.classList.contains('used'));
+    if (nextIdx === -1) return;
+
+    emailRows[nextIdx].classList.add('next-up');
+    if (passRows[nextIdx]) passRows[nextIdx].classList.add('next-up');
+  }
+
+  // ── SCROLL SYNC ──
+  (function setupScrollSync() {
+    const emailList = document.getElementById('emailList');
+    const passList  = document.getElementById('passList');
+    let isSyncing = false;
+
+    emailList.addEventListener('scroll', function () {
+      if (isSyncing) return;
+      isSyncing = true;
+      passList.scrollTop = emailList.scrollTop;
+      isSyncing = false;
+    });
+
+    passList.addEventListener('scroll', function () {
+      if (isSyncing) return;
+      isSyncing = true;
+      emailList.scrollTop = passList.scrollTop;
+      isSyncing = false;
+    });
+  })();
 
   // Restaurar sessão ao carregar
   document.getElementById('homeScreen').style.display = 'flex';
