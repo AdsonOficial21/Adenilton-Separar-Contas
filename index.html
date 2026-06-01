@@ -92,7 +92,7 @@
     inset: 0;
     background: var(--bg);
     z-index: 100;
-    display: flex;
+    display: none;
     flex-direction: column;
     align-items: center;
     justify-content: center;
@@ -870,8 +870,6 @@
   // ── NAVEGAÇÃO ──
   function entrar(nome) {
     usuarioAtivo = nome;
-    localStorage.setItem('ats_usuario', nome);
-    limparTela();
     document.getElementById('homeScreen').style.display = 'none';
     document.getElementById('btnBack').style.display = 'flex';
     document.getElementById('activeUserTag').style.display = 'flex';
@@ -884,9 +882,8 @@
     if (usuarioAtivo) {
       db.ref('usuarios/' + usuarioAtivo.toLowerCase()).remove();
     }
-    localStorage.removeItem('ats_usuario');
     usuarioAtivo = null;
-    parsed = { emails: [], passwords: [] };
+    limparTela();
     document.getElementById('homeScreen').style.display = 'flex';
     document.getElementById('btnBack').style.display = 'none';
     document.getElementById('activeUserTag').style.display = 'none';
@@ -1124,10 +1121,7 @@
   });
 
   // Restaurar sessão ao carregar
-  (function init() {
-    const usuario = localStorage.getItem('ats_usuario');
-    if (usuario) entrar(usuario);
-  })();
+  document.getElementById('homeScreen').style.display = 'flex';
 </script>
 
 </body>
