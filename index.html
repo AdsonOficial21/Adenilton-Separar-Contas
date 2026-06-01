@@ -887,6 +887,7 @@
     usuarioAtivo = null;
     limparTela();
     document.getElementById('homeScreen').style.display = 'flex';
+  window.addEventListener('resize', syncRowHeights);
     document.getElementById('btnBack').style.display = 'none';
     document.getElementById('activeUserTag').style.display = 'none';
   }
@@ -932,7 +933,8 @@
                 if (passRows[idx]) passRows[idx].classList.add('used');
               }
             });
-          }, 100);
+            syncRowHeights();
+          }, 150);
         }
       }
     });
@@ -999,6 +1001,7 @@
     });
 
     showToast(`${count} CONTA${count > 1 ? 'S' : ''} SEPARADA${count > 1 ? 'S' : ''}`);
+    setTimeout(syncRowHeights, 50);
   }
 
   function makeEmailRow(num, email, idx) {
@@ -1111,6 +1114,22 @@
     return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
   }
 
+
+  function syncRowHeights() {
+    const emailRows = document.querySelectorAll('#emailList .item-row');
+    const passRows  = document.querySelectorAll('#passList .item-row');
+    // Reset heights first
+    emailRows.forEach(r => r.style.height = '');
+    passRows.forEach(r  => r.style.height = '');
+    // Sync each pair
+    emailRows.forEach((eRow, i) => {
+      if (!passRows[i]) return;
+      const h = Math.max(eRow.offsetHeight, passRows[i].offsetHeight);
+      eRow.style.height  = h + 'px';
+      passRows[i].style.height = h + 'px';
+    });
+  }
+
   document.getElementById('input').addEventListener('input', () => {
     const raw = document.getElementById('input').value.trim();
     if (raw) {
@@ -1124,6 +1143,7 @@
 
   // Restaurar sessão ao carregar
   document.getElementById('homeScreen').style.display = 'flex';
+  window.addEventListener('resize', syncRowHeights);
 </script>
 
 </body>
